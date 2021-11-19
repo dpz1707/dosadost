@@ -6,11 +6,21 @@
 * M2: output to linear actuator 2
 * M3: output to motor spreader
 */
+
+//Importing
+#include <Vex.h>
+
 #define echoPin 2 // attach pin D2 Arduino to pin Echo of HC-SR04
 #define trigPin 3 //attach pin D3 Arduino to pin Trig of HC-SR04
 #define buttonOutputPin 4 //attach pin D4 to Button
 #define voltmeterPin 5
 #define secondsButtonPressedShutoff 4 //number of seconds button needs to be held for the system to restart/stop
+
+//Motor Stuff
+#define motorPin 1
+#define time 60
+#define motorPower 75 //on a scale from 0 to 100
+Adafruit_DCMotor *motorA = Motor.setMotor(motorPin);
 
 // defines variables
 long duration; // variable for the duration of sound wave travel
@@ -22,6 +32,8 @@ void setup()
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
   pinMode(buttonOutputPin, INPUT_PULLUP);
+  Motor.begin();
+  pinMode(9, INPUT);
   Serial.begin(9600); // // Serial Communication is starting with 9600 of baudrate speed
   Serial.println("Ultrasonic Sensor HC-SR04 Test"); // print some text in Serial Monitor
   Serial.println("with Arduino UNO R3");
@@ -86,6 +98,11 @@ int state0Idle()
 
 void state1Lowering()
 {
+    /*LOWERING LOGIC
+    *check distance
+    *if distance is greater than "amount" then lower platform
+    *if stance is less than "amount" then state = 2
+    */
     Serial.println("In state 1");
     digitalWrite(trigPin, LOW);
     delayMicroseconds(10000);
@@ -114,5 +131,5 @@ void state2Spreading()
 
 void state3Raising()
 {
- 
+  
 }
