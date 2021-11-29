@@ -24,8 +24,8 @@
 #define raiseSpeed -100 //the power that will be given to the actuators while they are raising
 #define spreadSpeed 20 //the power that will be given to the motor while it is spreading the batter
 #define spreadTime 10 //the time, in seconds, for which the motor will run to spread the batter
-#define bufferSize 6 //Number of distance sensor readings that need to be within ellipson units of the desired distance
-#define ellipson 0.5 //The degree of leniency with which a distance sensor reading will be considered valid
+#define bufferSize 2 //Number of distance sensor readings that need to be within ellipson units of the desired distance
+#define ellipson 1 //The degree of leniency with which a distance sensor reading will be considered valid
 #define distanceSensorDistance 25 //the number of units the distance sensor will need to be away from the pan for the platform to be considered "fully lowered"
 #define minuteTimer 5 //the number of minutes that the maker will count to before playing the music voltmeter
 #define MILLISECONDSPERMINUTE 60000 //the number of milliseconds in one minute
@@ -52,6 +52,7 @@ void setup()
   pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
   pinMode(buttonOutputPin, INPUT_PULLUP);
   Serial.begin(9600); // // Serial Communication is starting with 9600 of baudrate speed
+  digitalWrite(voltmeterPin, HIGH);
   Serial.println("Finished raising actuators");
 }
 
@@ -79,11 +80,11 @@ void loop()
   {
   //state 0 indicates that device not started
   case 0: 
-    if(promptStorage())
-    {
-      lowerFully();
-      exit(0);
-    }
+//    if(promptStorage())
+//    {
+//      lowerFully();
+//      exit(0);
+//    }
     state = state0Idle();
   break;
     
@@ -155,7 +156,10 @@ int state0Idle()
 {
    
     if(digitalRead(buttonOutputPin) == LOW && promptShutoff() == false)
+    {
+        digitalWrite(voltmeterPin, LOW);
         return 1;
+    }
     return 0;
 }
 
@@ -188,9 +192,11 @@ void state2Spreading()
  */
 void state3Raising()
 {
-    Motor.moveTank(actuator1, actuator2, raiseSpeed, raiseSpeed, 33);
+    Motor.moveTank(actuator1, actuator2, raiseSpeed, raiseSpeed, 1);
     long currentTime = millis();
-    if(currentTime - startTime == minuteTimer * MILLISECONDSPERMINUTE)
+    long elapsed = currentTime - startTime;
+    Serial.println("Time Elapsed: " + elapsed); 
+    if(elapsed >= minuteTimer * MILLISECONDSPERMINUTE)
     {
       digitalWrite(voltmeterPin, HIGH);
       state = 4;
@@ -243,7 +249,7 @@ long takeDistanceReading()
     duration = pulseIn(echoPin, HIGH);
     // Calculating the distance
     distance = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
-    Serial.println(distance);
+    Serial.println("Distance: " + distance);
     return distance;
 }
 
