@@ -51,6 +51,7 @@ void setup()
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
   pinMode(buttonOutputPin, INPUT_PULLUP);
+  pinMode(storageButtonPin, INPUT_PULLUP);
   Serial.begin(9600); // // Serial Communication is starting with 9600 of baudrate speed
   digitalWrite(voltmeterPin, HIGH);
   Serial.println("Finished raising actuators");
@@ -74,36 +75,43 @@ void setup()
  */
 void loop() 
 {
+  Serial.print("STATE IS: ");
+  Serial.println(state);
   if(state != 0 && state != 4 && promptShutoff())
       state = 0;
   switch (state) 
   {
   //state 0 indicates that device not started
   case 0: 
-//    if(promptStorage())
-//    {
-//      lowerFully();
-//      exit(0);
-//    }
+    if(promptStorage())
+    {
+      lowerFully();
+      exit(0);
+    }
+    Serial.println("INSIDE OF STATE 0");
     state = state0Idle();
   break;
     
   //state 1 indicates lowering of platform
   case 1:
+  Serial.println("INSIDE OF STATE 1");
       state1Lowering();
   break;
 
   //state 2 indicates spreading of batter
   case 2:
+  Serial.println("INSIDE OF STATE 2");
     state2Spreading();
   break;
 
   //state 3 indicates raising of platform
   case 3:
+  Serial.println("INSIDE OF STATE 3");
     state3Raising();
   break;
 
   case 4:
+  Serial.println("INSIDE OF STATE 4");
     state4Alarm();
   break;
   }
@@ -195,7 +203,8 @@ void state3Raising()
     Motor.moveTank(actuator1, actuator2, raiseSpeed, raiseSpeed, 1);
     long currentTime = millis();
     long elapsed = currentTime - startTime;
-    Serial.println("Time Elapsed: " + elapsed); 
+    Serial.print("Time Elapsed: "); 
+    Serial.println(elapsed);
     if(elapsed >= minuteTimer * MILLISECONDSPERMINUTE)
     {
       digitalWrite(voltmeterPin, HIGH);
@@ -211,6 +220,7 @@ void state4Alarm()
     if(digitalRead(buttonOutputPin) == LOW)
     {
         digitalWrite(voltmeterPin, LOW);
+        delay(2000);
         state = 0;
     }
 }
@@ -224,8 +234,8 @@ boolean isLoweredFully()
   {
     if(abs(takeDistanceReading() - distanceSensorDistance) > ellipson)
     {
-      if(takeDistanceReading() - distanceSensorDistance < 0)
-          Motor.moveTank(actuator1, actuator2, raiseSpeed, raiseSpeed, 2);
+      //if(takeDistanceReading() - distanceSensorDistance < 0)
+          //Motor.moveTank(actuator1, actuator2, raiseSpeed, raiseSpeed, 2);
             return false;
     }
   }
@@ -249,7 +259,8 @@ long takeDistanceReading()
     duration = pulseIn(echoPin, HIGH);
     // Calculating the distance
     distance = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
-    Serial.println("Distance: " + distance);
+    Serial.print("Distance: ");
+    Serial.println(distance);
     return distance;
 }
 
