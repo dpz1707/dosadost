@@ -9,6 +9,7 @@
 */
 
 #include <Vex.h>
+#include <Servo.h>
 
 #define echoPin 2 // attach pin D2 Arduino to pin Echo of HC-SR04
 #define trigPin 3 //attach pin D3 Arduino to pin Trig of HC-SR04
@@ -22,21 +23,23 @@
 #define lowerSpeed 100 //the power that will be given to the actuators while they are lowering
 #define lowerTime 0.5 //the increments of time with which the actuators will lower before testing the distance
 #define raiseSpeed -100 //the power that will be given to the actuators while they are raising
-#define spreadSpeed 20 //the power that will be given to the motor while it is spreading the batter
+#define spreadSpeed 10 //the power that will be given to the motor while it is spreading the batter
 #define spreadTime 10 //the time, in seconds, for which the motor will run to spread the batter
 #define bufferSize 2 //Number of distance sensor readings that need to be within ellipson units of the desired distance
 #define ellipson 1 //The degree of leniency with which a distance sensor reading will be considered valid
-#define distanceSensorDistance 25 //the number of units the distance sensor will need to be away from the pan for the platform to be considered "fully lowered"
-#define minuteTimer 5 //the number of minutes that the maker will count to before playing the music voltmeter
+#define distanceSensorDistance 30 //the number of units the distance sensor will need to be away from the pan for the platform to be considered "fully lowered"
+#define minuteTimer 1 //the number of minutes that the maker will count to before playing the music voltmeter
 #define MILLISECONDSPERMINUTE 60000 //the number of milliseconds in one minute
 #define timeStorageButtonPressed 3 //the number of seconds the storage button needs to be held for to store the machine
 Vex Motor;
-
+Servo dispenser;
 
 // defines variables
 int state = 0; //the state in which the machine is at any given time
 int timeElapsed = 0; //the time for which the button has been held down
 long startTime; //variable to track the time at which the machine started counting for the alarm
+int counter = 0;
+
 Adafruit_DCMotor *actuator1 = Motor.setMotor(actuator1Pin); //the first actuator
 Adafruit_DCMotor *actuator2 = Motor.setMotor(actuator2Pin); //the second actuator
 Adafruit_DCMotor *spreader = Motor.setMotor(spreaderPin); ///the spreader motor
@@ -47,13 +50,15 @@ Adafruit_DCMotor *spreader = Motor.setMotor(spreaderPin); ///the spreader motor
 void setup() 
 {
   Motor.begin();
-  Motor.moveTank(actuator1, actuator2, -lowerSpeed, -lowerSpeed, 33);
+  Motor.moveTank(actuator1, actuator2, raiseSpeed, raiseSpeed, 20);
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
   pinMode(buttonOutputPin, INPUT_PULLUP);
   pinMode(storageButtonPin, INPUT_PULLUP);
+  
   Serial.begin(9600); // // Serial Communication is starting with 9600 of baudrate speed
   digitalWrite(voltmeterPin, HIGH);
+//  dispenser.attach(9);
   Serial.println("Finished raising actuators");
 }
 
@@ -83,13 +88,13 @@ void loop()
   {
   //state 0 indicates that device not started
   case 0: 
+    state = state0Idle();
     if(promptStorage())
     {
       lowerFully();
-      exit(0);
     }
     Serial.println("INSIDE OF STATE 0");
-    state = state0Idle();
+
   break;
     
   //state 1 indicates lowering of platform
@@ -114,6 +119,13 @@ void loop()
   Serial.println("INSIDE OF STATE 4");
     state4Alarm();
   break;
+
+  case 5:
+  Serial.println("INSIDE OF STATE 5");
+    if(isLoweredFully())
+      exit(0);
+    else
+      Motor.moveTank(actuator1, actuator2, lowerSpeed, lowerSpeed, lowerTime);
   }
 }
 
@@ -189,6 +201,16 @@ void state1Lowering()
  */
 void state2Spreading()
 {
+//  while(counter < 2)
+//  {
+//    dispenser.write(0);
+//    delay(2000);
+//    dispenser.write(180);
+//    delay(2000);
+//    counter++;
+//  }
+
+  
     Motor.moveMotor(spreader, spreadSpeed, spreadTime);
     startTime = millis();
     state = 3;
@@ -269,5 +291,5 @@ long takeDistanceReading()
  */
 void lowerFully()
 {
-  Motor.moveTank(actuator1, actuator2, lowerSpeed, lowerSpeed, 33);
+   state = 5;
 }
