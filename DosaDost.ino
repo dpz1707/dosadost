@@ -58,7 +58,7 @@ void setup()
   
   Serial.begin(9600); // // Serial Communication is starting with 9600 of baudrate speed
   digitalWrite(voltmeterPin, HIGH);
-//  dispenser.attach(9);
+  dispenser.attach(9);
   Serial.println("Finished raising actuators");
 }
 
@@ -201,14 +201,13 @@ void state1Lowering()
  */
 void state2Spreading()
 {
-//  while(counter < 2)
-//  {
-//    dispenser.write(0);
-//    delay(2000);
-//    dispenser.write(180);
-//    delay(2000);
-//    counter++;
-//  }
+    //dispenser.write(0);
+    //dispenser.write(720);
+    //dispenser.writeMicroseconds(1000);
+    dispenser.write(360);
+    delay(2000);  
+    dispenser.write(0);
+    delay(2000);
 
   
     Motor.moveMotor(spreader, spreadSpeed, spreadTime);
